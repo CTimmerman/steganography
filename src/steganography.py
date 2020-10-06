@@ -65,7 +65,9 @@ def set_lowest_bits(img, bits=None, filler=None):
             for i in band_range:
                 try:
                     bit = next(bits)
-                    pixel[i] = pixel[i] & (254 + bit)
+                    if bit: pixel[i] |= 1
+                    else: pixel[i] &= ~1
+
                 except StopIteration:
                     if filler:
                         bits = filler()

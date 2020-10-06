@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ## Usage
 ```
-py steganography.py <-i input> [-c cover] [-o output]
+py steganography.py <-i input> [-c cover] [-o output] [--reveal]
 ```
 
 ## Examples

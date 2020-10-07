@@ -195,20 +195,26 @@ if __name__ == "__main__":
         sys.exit(pytest.main(sys.argv[2:]))
 
     args = sys.argv[1:]
-    if "-i" in args:
-        data_file = args[args.index("-i") + 1]
+    try:
+        if "--help" in args or "-h" in args: raise IndexError
+        data_file = sys.stdin.buffer if not "-i" in args else args[args.index("-i") + 1]
         cover_file = None if not "-c" in args else args[args.index("-c") + 1]
         output_file = None if not "-o" in args else args[args.index("-o") + 1]
-    else:
+    except IndexError:
         print("Usage: <-i input> [--reveal] [-c cover] [-o output]", file=sys.stderr)
         sys.exit(1)
 
     if "--reveal" in args:
-        data = reveal(Image.open(data_file))
-        if output_file:
-            open(output_file, "wb").write(data)
+        if type(data_file) is str:
+            secret = reveal(Image.open(data_file))
         else:
-            os.write(1, data)
+            fp = io.BytesIO()
+            fp.write(data_file.read())
+            secret = reveal(Image.open(fp))
+        if output_file:
+            open(output_file, "wb").write(secret)
+        else:
+            os.write(1, secret)
     else:
         try:
             image = hide(

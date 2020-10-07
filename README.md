@@ -14,7 +14,7 @@ pip install -r requirements.txt
 
 ## Usage
 ```
-py steganography.py [-i input] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--help | -h]
+py steganography.py [-i input] [--filler=zeroes|random] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--debug | -d] [--help | -h]
 ```
 Default input is stdin.
 
@@ -51,4 +51,11 @@ py src/steganography.py -i test/redpill.webp -c test/bluepill.webp > purple.webp
 py src/steganography.py -i purple.webp --reveal > secret.png
 or
 type purple.webp | py src/steganography.py --reveal > secret.webp
+
+It would be a little more efficient to stop reading bits at the secret length, but right not you can use debug logging to check the filler bits:
+
+py src/steganography.py -i test/redpill.webp -c test/bluepill.webp --filler=random > purple.webp
+py src/steganography.py --reveal -i purple.webp --debug > purple_msg.webp
+
+DEBUG:root:230400 recovered bits: [0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]...[1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0]
 ```

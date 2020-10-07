@@ -85,7 +85,7 @@ def set_lowest_bits(img, bits=None, filler=None):
     return img
 
 
-def hide(data, cover=None):
+def hide(data, cover=None, filler=None):
     data_length = len(data)
     cover_mode = "RGB"  # Invisible alpha channel is more suspicious.
     if not cover:
@@ -134,7 +134,7 @@ def hide(data, cover=None):
     )
     bits = length_header + bits
 
-    cover = set_lowest_bits(cover, bits)
+    cover = set_lowest_bits(cover, bits, filler)
     logging.info("Data hidden.")
     return cover
 
@@ -145,11 +145,11 @@ def reveal(cover):
 
     logging.info("Recovering bits.")
     bits = list(get_lowest_bits(cover))
-    logging.debug(f"{len(bits)} recovered bits: {bits[:32]}...")
+    logging.debug(f"{len(bits)} recovered bits: {bits[:32]}...{bits[-32:]}")
 
     data_length_bits = bits[:header_size]
     data_length_string = "".join(str(b) for b in data_length_bits)
-    logging.debug(f"header: {data_length_string} ({int(data_length_string, 2):,})")
+    logging.debug(f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})")
 
     data_length = int(data_length_string, 2)
     logging.info(f"Data length: {data_length:,}")
@@ -200,7 +200,9 @@ if __name__ == "__main__":
 
     args = sys.argv[1:]
     try:
-        if "--verbose" in args or "-v" in args:
+        if "--debug" in args or "-d" in args:
+            logging.basicConfig(level=logging.DEBUG)
+        elif "--verbose" in args or "-v" in args:
             logging.basicConfig(level=logging.INFO)
         else:
             logging.basicConfig(level=logging.WARNING)
@@ -209,11 +211,12 @@ if __name__ == "__main__":
             raise IndexError
 
         data_file = None if not "-i" in args else args[args.index("-i") + 1]
+        filler = zeroes if "--filler=zeroes" in args else random_bits if "--filler=random" in args else None
         cover_file = None if not "-c" in args else args[args.index("-c") + 1]
         output_file = None if not "-o" in args else args[args.index("-o") + 1]
     except IndexError:
         print(
-            "Usage: [-i input] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--help | -h]",
+            "Usage: [-i input] [--filler=zeroes|random] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--debug | -d] [--help | -h]",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -239,6 +242,7 @@ if __name__ == "__main__":
             image = hide(
                 secret,
                 None if not cover_file else Image.open(cover_file),
+                filler
             )
         except ValueError as e:
             print(

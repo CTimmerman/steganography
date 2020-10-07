@@ -145,7 +145,7 @@ def reveal(cover):
 
     logging.info("Recovering bits.")
     bits = list(get_lowest_bits(cover))
-    logging.debug(f"{len(bits)} recovered bits: {bits[:32]}...{bits[-32:]}")
+    logging.debug(f"{len(bits):,} recovered bits: {bits[:32]}...{bits[-32:]}")
 
     data_length_bits = bits[:header_size]
     data_length_string = "".join(str(b) for b in data_length_bits)

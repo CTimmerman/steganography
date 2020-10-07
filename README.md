@@ -57,5 +57,5 @@ It would be a little more efficient to stop reading bits at the secret length, b
 py src/steganography.py -i test/redpill.webp -c test/bluepill.webp --filler=random > purple.webp
 py src/steganography.py --reveal -i purple.webp --debug > purple_msg.webp
 
-DEBUG:root:230400 recovered bits: [0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]...[1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+DEBUG:root:230,400 recovered bits: [0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]...[1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0]
 ```

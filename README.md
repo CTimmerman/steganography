@@ -52,7 +52,7 @@ py src/steganography.py -i purple.webp --reveal > secret.png
 or
 type purple.webp | py src/steganography.py --reveal > secret.webp
 
-It would be a little more efficient to stop reading bits at the secret length, but right not you can use debug logging to check the filler bits:
+It would be a little more efficient to stop reading bits at the secret length, but right now you can use debug logging to check the filler bits:
 
 py src/steganography.py -i test/redpill.webp -c test/bluepill.webp --filler=random > purple.webp
 py src/steganography.py --reveal -i purple.webp --debug > purple_msg.webp

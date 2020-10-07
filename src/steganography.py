@@ -1,5 +1,5 @@
 """Steganography, by Cees Timmerman
-2020-10-06 v0.9 TODO: support RGBA cover images.
+2020-10-07 v1.0
 """
 import collections, logging, math
 from random import randint
@@ -65,8 +65,10 @@ def set_lowest_bits(img, bits=None, filler=None):
             for i in band_range:
                 try:
                     bit = next(bits)
-                    if bit: pixel[i] |= 1
-                    else: pixel[i] &= ~1
+                    if bit:
+                        pixel[i] |= 1
+                    else:
+                        pixel[i] &= ~1
 
                 except StopIteration:
                     if filler:
@@ -74,7 +76,8 @@ def set_lowest_bits(img, bits=None, filler=None):
                     else:
                         done = True
                         break
-            if y < 1 and x < 32: logging.debug(f"Setting {pixels[x, y]} to {pixel}...")
+            if y < 1 and x < 32:
+                logging.debug(f"Setting {pixels[x, y]} to {pixel}...")
             pixels[x, y] = tuple(pixel)
             if done:
                 return img
@@ -152,13 +155,14 @@ def reveal(cover):
     logging.info(f"Data length: {data_length:,}")
 
     data = list(bits2bytes(iter(bits[header_size : header_size + data_length * 8])))
-    logging.debug(f"{len(data):,} recovered bytes: {data[:32]}... {bytes(data[:32])}...")
+    logging.debug(
+        f"{len(data):,} recovered bytes: {data[:32]}... {bytes(data[:32])}..."
+    )
     return bytes(data)
 
 
 if __name__ == "__main__":
     import io, os, sys
-    logging.basicConfig(level=logging.DEBUG)
 
     if len(sys.argv) == 2 and sys.argv[1] == "--test":
         logging.basicConfig(level=logging.INFO)
@@ -196,20 +200,30 @@ if __name__ == "__main__":
 
     args = sys.argv[1:]
     try:
-        if "--help" in args or "-h" in args: raise IndexError
-        data_file = sys.stdin.buffer if not "-i" in args else args[args.index("-i") + 1]
+        if "--verbose" in args or "-v" in args:
+            logging.basicConfig(level=logging.INFO)
+        else:
+            logging.basicConfig(level=logging.WARNING)
+
+        if "--help" in args or "-h" in args:
+            raise IndexError
+
+        data_file = None if not "-i" in args else args[args.index("-i") + 1]
         cover_file = None if not "-c" in args else args[args.index("-c") + 1]
         output_file = None if not "-o" in args else args[args.index("-o") + 1]
     except IndexError:
-        print("Usage: <-i input> [--reveal] [-c cover] [-o output]", file=sys.stderr)
+        print(
+            "Usage: [-i input] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--help | -h]",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
-    if "--reveal" in args:
-        if type(data_file) is str:
+    if "--reveal" in args or "-r" in args:
+        if data_file:
             secret = reveal(Image.open(data_file))
         else:
             fp = io.BytesIO()
-            fp.write(data_file.read())
+            fp.write(sys.stdin.buffer.read())
             secret = reveal(Image.open(fp))
         if output_file:
             open(output_file, "wb").write(secret)
@@ -217,8 +231,13 @@ if __name__ == "__main__":
             os.write(1, secret)
     else:
         try:
+            if data_file:
+                secret = open(data_file, "rb").read()
+            else:
+                secret = sys.stdin.buffer.read()
+
             image = hide(
-                open(data_file, "rb").read(),
+                secret,
                 None if not cover_file else Image.open(cover_file),
             )
         except ValueError as e:

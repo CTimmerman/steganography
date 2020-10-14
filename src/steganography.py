@@ -87,7 +87,7 @@ def set_lowest_bits(img, bits=None, filler=None):
 
 def hide(data, cover=None, filler=None):
     data_length = len(data)
-    cover_mode = "RGB"  # Invisible alpha channel is more suspicious.
+    cover_mode = "RGB"
     if not cover:
         logging.info("Generating 4:3 image to hold data...")
         w = 0
@@ -99,7 +99,7 @@ def hide(data, cover=None, filler=None):
             if max_bytes > data_length + math.ceil(math.log2(max_bytes)):
                 break
         logging.info(f"{w}x{h}")
-        cover = Image.new(cover_mode, (w, h), color="white")
+        cover = Image.new(cover_mode, (w, h), color=(255, 255, 255, 0))
 
     max_bits = cover.size[0] * cover.size[1] * len(cover.mode)
     header_size = math.ceil(math.log2(max_bits // 8))
@@ -166,40 +166,6 @@ def reveal(cover):
 if __name__ == "__main__":
     import io, os, sys
 
-    if len(sys.argv) == 2 and sys.argv[1] == "--test":
-        logging.basicConfig(level=logging.INFO)
-
-        if 0:
-            from PIL import ImageDraw, ImageFont
-
-            base = Image.new("RGBA", (320, 240), color="black")
-
-            overlay = Image.new("RGBA", base.size, (255, 255, 255, 0))
-            text = "Red pill"
-            font = ImageFont.truetype("arial.ttf", 50)
-            draw = ImageDraw.Draw(overlay)
-            text_w, text_h = draw.textsize(text, font=font)
-            draw.text(
-                (base.size[0] / 2 - text_w / 2, base.size[1] / 2 - text_h / 2),
-                "Red pill",
-                font=font,
-                fill=(255, 0, 0, 200),
-            )
-
-            out = Image.alpha_composite(base, overlay)
-            out.save("test/redpill.webp", lossless=True)
-
-            sys.exit(0)
-
-        cover = hide(b"The Matrix has you.", Image.new("RGB", (40, 20), color="white"))
-        print(reveal(cover))
-        sys.exit(0)
-
-    if len(sys.argv) > 1 and sys.argv[1] == "--pytest":
-        import pytest
-
-        sys.exit(pytest.main(sys.argv[2:]))
-
     args = sys.argv[1:]
     try:
         if "--debug" in args or "-d" in args:
@@ -228,6 +194,51 @@ if __name__ == "__main__":
             file=sys.stderr,
         )
         sys.exit(1)
+
+    ### undocumented test parameters
+
+    if "--test" in args:
+        logging.basicConfig(level=logging.INFO)
+
+        if 0:
+            from PIL import ImageDraw, ImageFont
+
+            base = Image.new("RGBA", (320, 240), color="black")
+
+            overlay = Image.new("RGBA", base.size, (255, 255, 255, 0))
+            text = "Red pill"
+            font = ImageFont.truetype("arial.ttf", 50)
+            draw = ImageDraw.Draw(overlay)
+            text_w, text_h = draw.textsize(text, font=font)
+            draw.text(
+                (base.size[0] / 2 - text_w / 2, base.size[1] / 2 - text_h / 2),
+                "Red pill",
+                font=font,
+                fill=(255, 0, 0, 200),
+            )
+
+            out = Image.alpha_composite(base, overlay)
+            out.save("test/redpill.webp", lossless=True)
+
+            sys.exit(0)
+
+        cover = hide(
+            b"The Matrix has you.",
+            Image.new("RGBA", (40, 20), color="white"),
+        )
+        cover.save(
+            "temp.webp", lossless=True
+        )  # FIXME: Pillow WebP RGBA bug. Works fine with RGB or PNG.
+        cover = Image.open("temp.webp")
+        print(reveal(cover))
+        sys.exit(0)
+
+    if "--pytest" in args:
+        import pytest
+
+        sys.exit(pytest.main(sys.argv[2:]))
+
+    ###
 
     if "--reveal" in args or "-r" in args:
         if data_file:

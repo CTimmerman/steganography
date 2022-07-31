@@ -25,9 +25,11 @@ def bytes2bits(byts):
 
 
 def get_lowest_bits(img):
-    band_range = range(len(img.getbands()))
+    band_count = len(img.getbands())
     for pixel in img.getdata():
-        for i in band_range:
+        if band_count == 1:
+            pixel = [pixel]
+        for i in range(band_count):
             yield pixel[i] & 1
 
 
@@ -61,7 +63,11 @@ def set_lowest_bits(img, bits=None, filler=None):
     done = False
     for y in range(h):
         for x in range(w):
-            pixel = list(pixels[x, y])
+            pixel = pixels[x, y]
+            if type(pixel) == int:
+                pixel = [pixel]
+            else:
+                pixel = list(pixel)
             for i in band_range:
                 try:
                     bit = next(bits)
@@ -143,7 +149,6 @@ def reveal(cover):
     max_bits = cover.size[0] * cover.size[1] * len(cover.mode)
     header_size = math.ceil(math.log2(max_bits // 8))
 
-    logging.info("Recovering bits.")
     bits = list(get_lowest_bits(cover))
     logging.debug(f"{len(bits):,} recovered bits: {bits[:32]}...{bits[-32:]}")
 
@@ -154,7 +159,7 @@ def reveal(cover):
     )
 
     data_length = int(data_length_string, 2)
-    logging.info(f"Data length: {data_length:,}")
+    logging.info(f"Read data length: {data_length:,}")
 
     data = list(bits2bytes(iter(bits[header_size : header_size + data_length * 8])))
     logging.debug(

@@ -1,10 +1,15 @@
-"""Steganography, by Cees Timmerman
-2020-10-07 v1.0
+"""Steganography
+
+2020-10-07 v1.0 by Cees Timmerman.
+2022-07-31 v1.0.1 Don't break on 1 bpp PNG.
 """
-import collections, logging, math
+import logging
+import math
 from random import randint
 
 from PIL import Image  # pip install Pillow
+
+DEBUG_CONTEXT = 8
 
 
 def bits2bytes(bits):
@@ -44,20 +49,23 @@ def random_bits():
 
 
 def rand(seed=123456789):
-    "https://stackoverflow.com/a/3062783/819417"
+    """https://stackoverflow.com/a/3062783/819417"""
     seed = (1103515245 * seed + 12345) % 2 ** 31
     return seed
 
 
 def set_lowest_bits(img, bits=None, filler=None):
-    if bits == None:
+    if bits is None:
         bits = []
 
-    logging.debug(f"Setting bits: {bits[:32]}...")
+    logging.debug(f"Setting bits: {bits[:DEBUG_CONTEXT]}...")
     bits = iter(bits)
 
     w, h = img.size
-    band_range = range(len(img.getbands()))
+    mode = img.getbands()
+    logging.debug(f"Bands: {mode}")
+    band_range = range(len(mode))
+    mode = mode[0]
     pixels = img.load()
 
     done = False
@@ -82,9 +90,13 @@ def set_lowest_bits(img, bits=None, filler=None):
                     else:
                         done = True
                         break
-            if y < 1 and x < 32:
-                logging.debug(f"Setting {pixels[x, y]} to {pixel}...")
-            pixels[x, y] = tuple(pixel)
+            if y < 1 and x < 3:
+                logging.debug(f"Setting {pixels[x, y]} at {x}, {y} to {pixel}...")
+
+            if mode == '1':
+                pixels[x, y] = 1 if pixel[0] == 255 else 0
+            else:
+                pixels[x, y] = tuple(pixel)
             if done:
                 return img
 
@@ -117,7 +129,7 @@ def hide(data, cover=None, filler=None):
     )
 
     logging.info(
-        f"Message has {data_length*8:,} bits / {data_length:,} bytes: {data[:32]}... {[c for c in data[:32]]}"
+        f"Message has {data_length*8:,} bits / {data_length:,} bytes: {data[:DEBUG_CONTEXT]}... {[c for c in data[:DEBUG_CONTEXT]]}"
     )
 
     if data_length * 8 > max_bits:
@@ -132,12 +144,10 @@ def hide(data, cover=None, filler=None):
 
     bit_stream = bytes2bits(data)
     bits = list(bit_stream)
-    logging.debug(f"{len(bits)} data bits: {bits[:100]}...")
+    #logging.debug(f"{len(bits)} data bits: {bits[:100]}...")
 
     length_header = [int(b) for b in format(data_length, f"0{header_size}b")]
-    logging.debug(
-        f"Add {header_size}-bit header to specify length of data. {length_header}"
-    )
+    #logging.debug(f"Add {header_size}-bit header to specify length of data. {length_header}")
     bits = length_header + bits
 
     cover = set_lowest_bits(cover, bits, filler)
@@ -150,20 +160,18 @@ def reveal(cover):
     header_size = math.ceil(math.log2(max_bits // 8))
 
     bits = list(get_lowest_bits(cover))
-    logging.debug(f"{len(bits):,} recovered bits: {bits[:32]}...{bits[-32:]}")
+    #logging.debug(f"{len(bits):,} recovered bits: {bits[:DEBUG_CONTEXT]}...{bits[-DEBUG_CONTEXT:]}")
 
     data_length_bits = bits[:header_size]
     data_length_string = "".join(str(b) for b in data_length_bits)
-    logging.debug(
-        f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})"
-    )
+    #logging.debug(f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})")
 
     data_length = int(data_length_string, 2)
-    logging.info(f"Read data length: {data_length:,}")
+    logging.info(f"Data length: {data_length:,}")
 
-    data = list(bits2bytes(iter(bits[header_size : header_size + data_length * 8])))
+    data = list(bits2bytes(iter(bits[header_size:header_size + data_length * 8])))
     logging.debug(
-        f"{len(data):,} recovered bytes: {data[:32]}... {bytes(data[:32])}..."
+        f"{len(data):,} recovered bytes: {data[:DEBUG_CONTEXT]}... {bytes(data[:DEBUG_CONTEXT])}..."
     )
     return bytes(data)
 
@@ -183,7 +191,7 @@ if __name__ == "__main__":
         if "--help" in args or "-h" in args:
             raise IndexError
 
-        data_file = None if not "-i" in args else args[args.index("-i") + 1]
+        data_file = None if "-i" not in args else args[args.index("-i") + 1]
         filler = (
             zeroes
             if "--filler=zeroes" in args
@@ -191,8 +199,8 @@ if __name__ == "__main__":
             if "--filler=random" in args
             else None
         )
-        cover_file = None if not "-c" in args else args[args.index("-c") + 1]
-        output_file = None if not "-o" in args else args[args.index("-o") + 1]
+        cover_file = None if "-c" not in args else args[args.index("-c") + 1]
+        output_file = None if "-o" not in args else args[args.index("-o") + 1]
     except IndexError:
         print(
             "Usage: [-i input] [--filler=zeroes|random] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--debug | -d] [--help | -h]",
@@ -239,8 +247,8 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if "--pytest" in args:
+        """ Should be ran from project root. """
         import pytest
-
         sys.exit(pytest.main(sys.argv[2:]))
 
     ###

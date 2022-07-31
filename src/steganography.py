@@ -58,12 +58,12 @@ def set_lowest_bits(img, bits=None, filler=None):
     if bits is None:
         bits = []
 
-    logging.debug(f"Setting bits: {bits[:DEBUG_CONTEXT]}...")
+    logging.debug("Setting bits: %s...", bits[:DEBUG_CONTEXT])
     bits = iter(bits)
 
     w, h = img.size
     mode = img.getbands()
-    logging.debug(f"Bands: {mode}")
+    logging.debug("Bands: %s", mode)
     band_range = range(len(mode))
     mode = mode[0]
     pixels = img.load()
@@ -72,7 +72,7 @@ def set_lowest_bits(img, bits=None, filler=None):
     for y in range(h):
         for x in range(w):
             pixel = pixels[x, y]
-            if type(pixel) == int:
+            if isinstance(pixel, int):
                 pixel = [pixel]
             else:
                 pixel = list(pixel)
@@ -95,6 +95,8 @@ def set_lowest_bits(img, bits=None, filler=None):
 
             if mode == '1':
                 pixels[x, y] = 1 if pixel[0] == 255 else 0
+            elif mode == 'I':
+                pixels[x, y] = pixel[0]
             else:
                 pixels[x, y] = tuple(pixel)
             if done:
@@ -133,21 +135,17 @@ def hide(data, cover=None, filler=None):
     )
 
     if data_length * 8 > max_bits:
-        raise ValueError(
-            f"Message too long for cover. {data_length*8:,} > {max_bits:,} bits."
-        )
+        raise ValueError(f"Message too long for cover. {data_length*8:,} > {max_bits:,} bits.")
 
     if data_length > (2 ** header_size):
-        raise ValueError(
-            f"Message too long for header. {data_length:,} >= {2**header_size:,} bytes."
-        )
+        raise ValueError(f"Message too long for header. {data_length:,} >= {2**header_size:,} bytes.")
 
     bit_stream = bytes2bits(data)
     bits = list(bit_stream)
-    #logging.debug(f"{len(bits)} data bits: {bits[:100]}...")
+    # logging.debug(f"{len(bits)} data bits: {bits[:100]}...")
 
     length_header = [int(b) for b in format(data_length, f"0{header_size}b")]
-    #logging.debug(f"Add {header_size}-bit header to specify length of data. {length_header}")
+    # logging.debug(f"Add {header_size}-bit header to specify length of data. {length_header}")
     bits = length_header + bits
 
     cover = set_lowest_bits(cover, bits, filler)
@@ -160,11 +158,11 @@ def reveal(cover):
     header_size = math.ceil(math.log2(max_bits // 8))
 
     bits = list(get_lowest_bits(cover))
-    #logging.debug(f"{len(bits):,} recovered bits: {bits[:DEBUG_CONTEXT]}...{bits[-DEBUG_CONTEXT:]}")
+    # logging.debug(f"{len(bits):,} recovered bits: {bits[:DEBUG_CONTEXT]}...{bits[-DEBUG_CONTEXT:]}")
 
     data_length_bits = bits[:header_size]
     data_length_string = "".join(str(b) for b in data_length_bits)
-    #logging.debug(f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})")
+    # logging.debug(f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})")
 
     data_length = int(data_length_string, 2)
     logging.info(f"Data length: {data_length:,}")
@@ -239,15 +237,13 @@ if __name__ == "__main__":
             b"The Matrix has you.",
             Image.new("RGBA", (40, 20), color="white"),
         )
-        cover.save(
-            "temp.webp", lossless=True
-        )  # FIXME: Pillow WebP RGBA bug. Works fine with RGB or PNG.
+        cover.save("temp.webp", lossless=True)  # XXX: IrfanView 4.54 64-bit shows a black pixel top right with RGBA WEBP, but VS Code doesn't.
         cover = Image.open("temp.webp")
         print(reveal(cover))
         sys.exit(0)
 
     if "--pytest" in args:
-        """ Should be ran from project root. """
+        # Should be ran from project root.
         import pytest
         sys.exit(pytest.main(sys.argv[2:]))
 

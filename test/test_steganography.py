@@ -1,3 +1,4 @@
+import random
 import logging
 import logging.config
 from io import BytesIO
@@ -39,31 +40,30 @@ supported_formats = {
 
 
 def test_fuzz():
-	import random
 	for i in range(10):
 		length = random.randint(0, 200)
 		byts = bytes(random.randint(0, 255) for j in range(length))
 		logging.info(f"Random message #{i}: {length} bytes: {byts}")
-		for format in supported_formats:
-			for mode in supported_formats[format]:
+		for ext in supported_formats:
+			for mode in supported_formats[ext]:
 				try:
 					# Test encoding.
 					cover = hide(byts, Image.new(mode, (100, 20), color="white"))
 					assert reveal(cover) == byts
-					# Test format.
+					# Test ext.
 					with BytesIO() as fp:
 						try:
-							cover.save(fp, format, lossless=True)
+							cover.save(fp, ext, lossless=True)
 							fp.flush()
 							fp.seek(0)
 							img = Image.open(fp)
 							try:
 								assert reveal(img) == byts
-								logging.info(f"Message okay in {mode} {format}.")
+								logging.info(f"Message okay in {mode} {ext}.")
 							except AssertionError:
-								logging.error(f"Message corrupted in {mode} {format}. {cover.getbands()} cover bands => {img.getbands()} {format} bands.")
-								cover.save(open(f'cover.{format}', 'wb'), lossless=True)
-								img.save(open(f'img.{format}', 'wb'), lossless=True)
+								logging.error(f"Message corrupted in {mode} {ext}. {cover.getbands()} cover bands => {img.getbands()} {ext} bands.")
+								cover.save(open(f'cover.{ext}', 'wb'), lossless=True)
+								img.save(open(f'img.{ext}', 'wb'), lossless=True)
 								raise
 						except OSError as e:
 							if "cannot write mode" in str(e):

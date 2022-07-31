@@ -91,7 +91,10 @@ def set_lowest_bits(img, bits=None, filler=None):
                         done = True
                         break
             if y < 1 and x < 3:
-                logging.debug(f"Setting {pixels[x, y]} at {x}, {y} to {pixel}...")
+                logging.debug(
+                    "Setting %s at %s, %s to %s...",
+                    pixels[x, y], x, y, pixel
+                )
 
             if mode == '1':
                 pixels[x, y] = 1 if pixel[0] == 255 else 0

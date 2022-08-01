@@ -8,13 +8,11 @@ py -m venv .venv
 GNU:
 ```
 .venv/bin/activate
-echo $PWD/src > .venv/Lib/site-packages/.pth
 ```
 
 Windows:
 ```
 .venv/Scripts/activate
-echo %cd%\src > .venv/Lib/site-packages/.pth
 ```
 
 ```

@@ -5,7 +5,7 @@
 """
 import logging
 import math
-from random import randint
+from secrets import randbits
 
 from PIL import Image  # pip install Pillow
 
@@ -45,7 +45,7 @@ def zeroes():
 
 def random_bits():
     while True:
-        yield randint(0, 1)
+        yield randbits(1)
 
 
 def rand(seed=123456789):
@@ -168,7 +168,7 @@ def reveal(cover):
     # logging.debug(f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})")
 
     data_length = int(data_length_string, 2)
-    logging.info(f"Data length: {data_length:,}")
+    logging.debug(f"Data length: {data_length:,}")
 
     data = list(bits2bytes(iter(bits[header_size:header_size + data_length * 8])))
     logging.debug(
@@ -179,7 +179,24 @@ def reveal(cover):
 
 if __name__ == "__main__":
     import io, os, sys
-
+    '''
+    from PIL import ImageDraw, ImageFont
+    base = Image.new("RGBA", (320, 240), color="black")
+    overlay = Image.new("RGBA", base.size, (255, 255, 255, 0))
+    text = "Red pill"
+    font = ImageFont.truetype("arial.ttf", 50)
+    draw = ImageDraw.Draw(overlay)
+    text_w, text_h = draw.textsize(text, font=font)
+    draw.text(
+        (base.size[0] / 2 - text_w / 2, base.size[1] / 2 - text_h / 2),
+        "Red pill",
+        font=font,
+        fill=(255, 0, 0, 200),
+    )
+    out = Image.alpha_composite(base, overlay)
+    out.save("test/redpill.webp", lossless=True)
+    sys.exit(0)
+    '''
     args = sys.argv[1:]
     try:
         if "--debug" in args or "-d" in args:
@@ -193,7 +210,7 @@ if __name__ == "__main__":
             raise IndexError
 
         data_file = None if "-i" not in args else args[args.index("-i") + 1]
-        filler = (
+        filler_fun = (
             zeroes
             if "--filler=zeroes" in args
             else random_bits
@@ -209,48 +226,9 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    ### undocumented test parameters
-
-    if "--test" in args:
-        logging.basicConfig(level=logging.INFO)
-
-        if 0:
-            from PIL import ImageDraw, ImageFont
-
-            base = Image.new("RGBA", (320, 240), color="black")
-
-            overlay = Image.new("RGBA", base.size, (255, 255, 255, 0))
-            text = "Red pill"
-            font = ImageFont.truetype("arial.ttf", 50)
-            draw = ImageDraw.Draw(overlay)
-            text_w, text_h = draw.textsize(text, font=font)
-            draw.text(
-                (base.size[0] / 2 - text_w / 2, base.size[1] / 2 - text_h / 2),
-                "Red pill",
-                font=font,
-                fill=(255, 0, 0, 200),
-            )
-
-            out = Image.alpha_composite(base, overlay)
-            out.save("test/redpill.webp", lossless=True)
-
-            sys.exit(0)
-
-        cover = hide(
-            b"The Matrix has you.",
-            Image.new("RGBA", (40, 20), color="white"),
-        )
-        cover.save("temp.webp", lossless=True)  # XXX: IrfanView 4.54 64-bit shows a black pixel top right with RGBA WEBP, but VS Code doesn't.
-        cover = Image.open("temp.webp")
-        print(reveal(cover))
-        sys.exit(0)
-
-    if "--pytest" in args:
-        # Should be ran from project root.
+    if "--test" in args:  # Should be ran from project root.
         import pytest
         sys.exit(pytest.main(sys.argv[2:]))
-
-    ###
 
     if "--reveal" in args or "-r" in args:
         if data_file:
@@ -271,13 +249,10 @@ if __name__ == "__main__":
                 secret = sys.stdin.buffer.read()
 
             image = hide(
-                secret, None if not cover_file else Image.open(cover_file), filler
+                secret, None if not cover_file else Image.open(cover_file), filler_fun
             )
         except ValueError as e:
-            print(
-                e,
-                file=sys.stderr,
-            )
+            print(e, file=sys.stderr)
             sys.exit(2)
 
         if output_file:

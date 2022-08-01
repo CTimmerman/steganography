@@ -8,6 +8,8 @@ extension-pkg-whitelist=
 # Specify a score threshold to be exceeded before program exits with error.
 fail-under=10
 
+init-hook="import sys; sys.path.append('.')"
+
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
 ignore=CVS
@@ -61,6 +63,7 @@ confidence=
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
 disable=bad-continuation,
+        fixme,
         invalid-name,
         line-too-long,
         logging-fstring-interpolation,
@@ -68,7 +71,10 @@ disable=bad-continuation,
         missing-module-docstring,
         mixed-indentation,
         multiple-imports,
-        too-many-branches
+        pointless-string-statement,
+        too-many-branches,
+        unnecessary-comprehension,
+        using-constant-test
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

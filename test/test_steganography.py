@@ -5,20 +5,20 @@ from io import BytesIO
 
 import pytest
 from PIL import Image
-from steganography import hide, reveal
+from src.steganography import hide, reveal
 
 
-byts = b"The Matrix has you."
+data = b"The Matrix has you."
 
 
 def test():
-	cover = hide(byts, Image.new("RGB", (40, 20), color="white"))
-	assert reveal(cover) == byts
+	cover = hide(data, Image.new("RGB", (40, 20), color="white"))
+	assert reveal(cover) == data  # nosec
 
 
 def test_too_much_data():
 	with pytest.raises(ValueError):
-		hide(byts, Image.new("RGB", (4, 2)))
+		hide(data, Image.new("RGB", (4, 2)))
 
 
 # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
@@ -32,7 +32,7 @@ supported_formats = {
 	'PCX': ('1', 'L', 'P', 'RGB'),
 	'PNG': ('1', 'L', 'LA', 'I', 'P', 'RGB', 'RGBA'),
 	'PPM': ('1', 'L', 'I', 'RGB'),
-	# 'SGI': ('L', 'RGB', 'RGBA'),  # FIXME: PIL save closes file.
+	# 'SGI': ('L', 'RGB', 'RGBA'),  # FIXME: PIL save() closes file.
 	'TGA': ('L', 'LA', 'P', 'RGB', 'RGBA'),
 	'TIFF': ('1', 'L', 'LA', 'RGB', 'RGBA', 'CMYK'),
 	'WEBP': ('RGB', 'RGBA'),  # WEBP saves 24 instead of 1 bpp.
@@ -41,15 +41,15 @@ supported_formats = {
 
 def test_fuzz():
 	for i in range(10):
-		length = random.randint(0, 200)
-		byts = bytes(random.randint(0, 255) for j in range(length))
-		logging.info(f"Random message #{i}: {length} bytes: {byts}")
+		length = random.randint(0, 200)  # nosec
+		random_bytes = bytes(random.randint(0, 255) for j in range(length))  # nosec
+		logging.info(f"Random message #{i}: {length} bytes: {random_bytes}")
 		for ext in supported_formats:
 			for mode in supported_formats[ext]:
 				try:
 					# Test encoding.
-					cover = hide(byts, Image.new(mode, (100, 20), color="white"))
-					assert reveal(cover) == byts
+					cover = hide(random_bytes, Image.new(mode, (100, 20), color="white"))
+					assert reveal(cover) == random_bytes  # nosec
 					# Test ext.
 					with BytesIO() as fp:
 						try:
@@ -58,7 +58,7 @@ def test_fuzz():
 							fp.seek(0)
 							img = Image.open(fp)
 							try:
-								assert reveal(img) == byts
+								assert reveal(img) == random_bytes  # nosec
 								logging.info(f"Message okay in {mode} {ext}.")
 							except AssertionError:
 								logging.error(f"Message corrupted in {mode} {ext}. {cover.getbands()} cover bands => {img.getbands()} {ext} bands.")
@@ -66,12 +66,8 @@ def test_fuzz():
 								img.save(open(f'img.{ext}', 'wb'), lossless=True)
 								raise
 						except OSError as e:
-							if "cannot write mode" in str(e):
-								logging.error(e)
-								raise
-							else:
-								logging.error(e)
-								raise
+							logging.error(e)
+							raise
 				except ValueError as e:
 					logging.error(e)
 					raise e
@@ -80,7 +76,7 @@ def test_fuzz():
 if __name__ == "__main__":
 	# Don't create own logger as that's strongly advised against (So why offer it?!) according to https://docs.python.org/3/howto/logging.html
 	# Use global setting and disable loggers of other modules instead. Also looks dirty!
-	logging.basicConfig(level=logging.DEBUG)
+	logging.basicConfig(level=logging.INFO)
 	"""
 	All 3 snippets below leave PIL output like:
 	DEBUG:PIL.PngImagePlugin:STREAM b'IHDR' 16 13

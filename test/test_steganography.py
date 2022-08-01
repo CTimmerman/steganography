@@ -2,11 +2,12 @@ import random
 import logging
 import logging.config
 from io import BytesIO
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
 
 import pytest
 from PIL import Image
-from src.steganography import hide, reveal
-
+from steganography import hide, reveal
 
 data = b"The Matrix has you."
 

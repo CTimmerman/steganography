@@ -8,7 +8,7 @@ extension-pkg-whitelist=
 # Specify a score threshold to be exceeded before program exits with error.
 fail-under=10
 
-init-hook="import sys; sys.path.append('.')"
+# init-hook="import sys; sys.path.append('.')"
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.

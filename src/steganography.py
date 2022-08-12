@@ -161,7 +161,7 @@ def reveal(cover):
 	header_size = math.ceil(math.log2(max_bits // 8))
 
 	bits = list(get_lowest_bits(cover))
-	# logging.debug(f"{len(bits):,} recovered bits: {bits[:DEBUG_CONTEXT]}...{bits[-DEBUG_CONTEXT:]}")
+	logging.debug(f"{len(bits):,} recovered bits: {bits[:DEBUG_CONTEXT]}...{bits[-DEBUG_CONTEXT:]}")
 
 	data_length_bits = bits[:header_size]
 	data_length_string = "".join(str(b) for b in data_length_bits)

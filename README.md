@@ -1,6 +1,7 @@
 # Steganography
 
 ## Installation
+
 ```
 py -m venv .venv
 ```
@@ -19,6 +20,9 @@ Windows:
 pip install -r requirements.txt
 ```
 
+Pillow >= 9.1.0 fails `pytest test\test_steganography.py`
+
+
 ## Usage
 ```
 py steganography.py [-i input] [--filler=zeroes|random] [-c cover] [-o output] [--reveal -r] [--verbose | -v] [--debug | -d] [--help | -h]
@@ -31,7 +35,7 @@ Default output is stdout.
 
 ## Examples
 
-In GNU, use `cat` and `/` instead of `type` and `\`
+In GNU, use `cat` and `/` instead of `type` and `\`. In Windows, use Command Prompt instead of PowerShell.
 ```
 IO streams:
 
@@ -64,5 +68,5 @@ It would be a little more efficient to stop reading bits at the secret length, b
 py src/steganography.py -i test/redpill.webp -c test/bluepill.webp --filler=random > purple.webp
 py src/steganography.py --reveal -i purple.webp --debug > purple_msg.webp
 
-DEBUG:root:230,400 recovered bits: [0, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]...[1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+DEBUG:root:230,400 recovered bits: [0, 0, 1, 1, 1, 1, 1, 0]...[1, 1, 0, 0, 0, 0, 1, 1]
 ```

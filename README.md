@@ -20,7 +20,7 @@ Windows:
 pip install -r requirements.txt
 ```
 
-Pillow >= 9.1.0 fails `pytest test\test_steganography.py`
+Pillow >= 9.1.0 fails `pytest test\test_steganography.py` - https://github.com/python-pillow/Pillow/issues/6494
 
 
 ## Usage

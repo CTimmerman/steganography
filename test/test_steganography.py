@@ -48,10 +48,9 @@ def test_fuzz():
 		for ext in supported_formats:
 			for mode in supported_formats[ext]:
 				try:
-					# Test encoding.
+					logging.info(f"Testing {mode} {ext}...")
 					cover = hide(random_bytes, Image.new(mode, (100, 20), color="white"))
 					assert reveal(cover) == random_bytes  # nosec
-					# Test ext.
 					with BytesIO() as fp:
 						try:
 							cover.save(fp, ext, lossless=True)

@@ -64,7 +64,6 @@ confidence=
 # --disable=W".
 disable=bad-continuation,
         consider-using-with,
-        django-not-available,
         fixme,
         invalid-name,
         line-too-long,

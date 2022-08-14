@@ -1,12 +1,14 @@
-import random
+from io import BytesIO
 import logging
 import logging.config
-from io import BytesIO
+import random
+
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../src'))
 
 import pytest
 from PIL import Image
+
 from steganography import hide, reveal, SUPPORTED_FORMATS
 
 data = b"The Matrix has you."
@@ -59,7 +61,7 @@ if __name__ == "__main__":
 	# Don't create own logger as that's strongly advised against (So why offer it?!) according to https://docs.python.org/3/howto/logging.html
 	# Use global setting and disable loggers of other modules instead. Also looks dirty!
 	logging.basicConfig(level=logging.DEBUG)
-	loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
+	loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]  # pylint: disable=no-member
 	for v in loggers:
 		print("Existing logger", v)
 		v.setLevel('WARNING')

@@ -10,6 +10,22 @@ from secrets import randbits
 from PIL import Image  # pip install Pillow
 
 DEBUG_CONTEXT = 8
+# https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
+SUPPORTED_FORMATS = {
+	'BMP': ('1', 'L', 'RGB'),
+	'DIB': ('1', 'L', 'RGB'),
+	# 'EPS': ('L', 'RGB', 'CMYK'),  # Needs Ghostscript in path.
+	'GIF': ('L', 'P'),
+	'IM': ('1', 'L', 'LA', 'RGB', 'RGBA', 'CMYK'),
+	# 'J2K': ('L', 'LA', 'RGB', 'RGBA'),
+	'PCX': ('1', 'L', 'P', 'RGB'),
+	'PNG': ('1', 'L', 'LA', 'I', 'P', 'RGB', 'RGBA'),
+	'PPM': ('1', 'L', 'I', 'RGB'),
+	# 'SGI': ('L', 'RGB', 'RGBA'),  # FIXME: PIL save() closes file.
+	'TGA': ('L', 'LA', 'P', 'RGB', 'RGBA'),
+	'TIFF': ('1', 'L', 'LA', 'RGB', 'RGBA', 'CMYK'),
+	'WEBP': ('RGB', 'RGBA'),  # WEBP saves 24 instead of 1 bpp.
+}
 
 
 def bits2bytes(bits):

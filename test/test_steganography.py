@@ -60,11 +60,13 @@ def test_fuzz():
 if __name__ == "__main__":
 	# Don't create own logger as that's strongly advised against (So why offer it?!) according to https://docs.python.org/3/howto/logging.html
 	# Use global setting and disable loggers of other modules instead. Also looks dirty!
-	# logging.basicConfig(level=logging.INFO)
-	# loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]  # pylint: disable=no-member
-	# for v in loggers:
-	# 	print("Existing logger", v)
-	# 	v.setLevel('WARNING')
+	# logging.basicConfig(level=logging.INFO)  # Conflicts with pytest. https://github.com/pytest-dev/pytest/issues/2251#issuecomment-1214488264
+
+	# Hide PIL lines.
+	loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]  # pylint: disable=no-member
+	for v in loggers:
+		print("Existing logger", v)
+		v.setLevel('WARNING')
 
 	# test_fuzz()
 

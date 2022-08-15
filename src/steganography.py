@@ -28,6 +28,21 @@ SUPPORTED_FORMATS = {
 }
 
 
+class BraceMessage:
+	"""Struct for lazy formatting."""
+
+	def __init__(self, fmt, /, *args, **kwargs):
+		self.fmt = fmt
+		self.args = args
+		self.kwargs = kwargs
+
+	def __str__(self):
+		return self.fmt.format(*self.args, **self.kwargs)
+
+
+lf = BraceMessage
+
+
 def bits2bytes(bits):
 	while True:
 		byte = 0
@@ -137,7 +152,7 @@ def hide(data, cover=None, filler=None):
 			max_bytes = w * h * len(cover_mode) // 8
 			if max_bytes > data_length + math.ceil(math.log2(max_bytes)):
 				break
-		logging.info(f"{w}x{h}")
+		logging.info("%ix%i", w, h)
 		cover = Image.new(cover_mode, (w, h), color=(255, 255, 255, 0))
 
 	max_bits = cover.size[0] * cover.size[1] * len(cover.mode)
@@ -146,11 +161,11 @@ def hide(data, cover=None, filler=None):
 	max_bytes = max_bits // 8
 
 	logging.info(
-		f"Cover has {max_bits:,} bits / {max_bytes:,} bytes available. ({header_size}-bit header)"
+		lf("Cover has {:,} bits / {:,} bytes available. ({}-bit header)", max_bits, max_bytes, header_size)
 	)
 
 	logging.info(
-		f"Message has {data_length*8:,} bits / {data_length:,} bytes: {data[:DEBUG_CONTEXT]}... {[c for c in data[:DEBUG_CONTEXT]]}"
+		lf("Message has {:,} bits / {:,} bytes: {}... {}", data_length * 8, data_length, data[:DEBUG_CONTEXT], [c for c in data[:DEBUG_CONTEXT]])
 	)
 
 	if data_length * 8 > max_bits:
@@ -161,10 +176,10 @@ def hide(data, cover=None, filler=None):
 
 	bit_stream = bytes2bits(data)
 	bits = list(bit_stream)
-	# logging.debug(f"{len(bits)} data bits: {bits[:100]}...")
+	# logging.debug(lf("{} data bits: {}...", len(bits), bits[:100]))
 
 	length_header = [int(b) for b in format(data_length, f"0{header_size}b")]
-	# logging.debug(f"Add {header_size}-bit header to specify length of data. {length_header}")
+	# logging.debug(lf("Add {}-bit header to specify length of data. {}", header_size, length_header))
 	bits = length_header + bits
 
 	cover = set_lowest_bits(cover, bits, filler)
@@ -177,18 +192,18 @@ def reveal(cover):
 	header_size = math.ceil(math.log2(max_bits // 8))
 
 	bits = list(get_lowest_bits(cover))
-	logging.debug(f"{len(bits):,} recovered bits: {bits[:DEBUG_CONTEXT]}...{bits[-DEBUG_CONTEXT:]}")
+	logging.debug(lf("{:,} recovered bits: {}...{}", len(bits), bits[:DEBUG_CONTEXT], bits[-DEBUG_CONTEXT:]))
 
 	data_length_bits = bits[:header_size]
 	data_length_string = "".join(str(b) for b in data_length_bits)
-	# logging.debug(f"{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})")
+	# logging.debug(lf("{header_size}-bit header: {data_length_string} ({int(data_length_string, 2):,})"))
 
 	data_length = int(data_length_string, 2)
-	logging.debug(f"Data length: {data_length:,}")
+	logging.debug(lf("Data length: {:,}", data_length))
 
 	data = list(bits2bytes(iter(bits[header_size:header_size + data_length * 8])))
 	logging.debug(
-		f"{len(data):,} recovered bytes: {data[:DEBUG_CONTEXT]}... {bytes(data[:DEBUG_CONTEXT])}..."
+		lf("{:,} recovered bytes: {}... {}...", len(data), data[:DEBUG_CONTEXT], bytes(data[:DEBUG_CONTEXT]))
 	)
 	return bytes(data)
 

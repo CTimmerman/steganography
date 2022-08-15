@@ -28,11 +28,11 @@ def test_fuzz():
 	for i in range(10):
 		length = random.randint(0, 200)  # nosec
 		random_bytes = bytes(random.randint(0, 255) for j in range(length))  # nosec
-		logging.info(f"Random message #{i}: {length} bytes: {random_bytes}")
+		logging.info("Random message #%i: %i bytes: %s", i, length, random_bytes)
 		for ext, modes in SUPPORTED_FORMATS.items():
 			for mode in modes:
 				try:
-					logging.info(f"Testing {mode} {ext}...")
+					logging.info("Testing %s %s...", mode, ext)
 					cover = hide(random_bytes, Image.new(mode, (100, 20), color="white"))
 					assert reveal(cover) == random_bytes  # nosec
 					with BytesIO() as fp:
@@ -43,9 +43,9 @@ def test_fuzz():
 							img = Image.open(fp)
 							try:
 								assert reveal(img) == random_bytes  # nosec
-								logging.info(f"Message okay in {mode} {ext}.")
+								logging.info("Message okay in %s %s.", mode, ext)
 							except AssertionError:
-								logging.error(f"Message corrupted in {mode} {ext}. {cover.getbands()} cover bands => {img.getbands()} {ext} bands.")
+								logging.error("Message corrupted in %s %s. %s cover bands => %s %s bands.", mode, ext, cover.getbands(), img.getbands(), ext)
 								cover.save(open(f'cover.{ext}', 'wb'), lossless=True)
 								img.save(open(f'img.{ext}', 'wb'), lossless=True)
 								raise
@@ -60,11 +60,12 @@ def test_fuzz():
 if __name__ == "__main__":
 	# Don't create own logger as that's strongly advised against (So why offer it?!) according to https://docs.python.org/3/howto/logging.html
 	# Use global setting and disable loggers of other modules instead. Also looks dirty!
-	logging.basicConfig(level=logging.DEBUG)
-	loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]  # pylint: disable=no-member
-	for v in loggers:
-		print("Existing logger", v)
-		v.setLevel('WARNING')
+	# logging.basicConfig(level=logging.INFO)
+	# loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict]  # pylint: disable=no-member
+	# for v in loggers:
+	# 	print("Existing logger", v)
+	# 	v.setLevel('WARNING')
 
-	#test_fuzz()
-	pytest.main(['--log-cli-level', 'WARNING'])
+	# test_fuzz()
+
+	pytest.main(['--log-cli-level', 'warning', *sys.argv])
